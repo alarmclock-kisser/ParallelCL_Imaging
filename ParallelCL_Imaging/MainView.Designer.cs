@@ -33,6 +33,8 @@
 			this.listBox_images = new ListBox();
 			this.pictureBox_view = new PictureBox();
 			this.panel_main = new Panel();
+			this.listBox_kernels = new ListBox();
+			this.panel_kernelParams = new Panel();
 			((System.ComponentModel.ISupportInitialize) this.pictureBox_view).BeginInit();
 			this.panel_main.SuspendLayout();
 			this.SuspendLayout();
@@ -80,11 +82,29 @@
 			this.panel_main.Size = new Size(512, 512);
 			this.panel_main.TabIndex = 4;
 			// 
+			// listBox_kernels
+			// 
+			this.listBox_kernels.FormattingEnabled = true;
+			this.listBox_kernels.ItemHeight = 15;
+			this.listBox_kernels.Location = new Point(310, 530);
+			this.listBox_kernels.Name = "listBox_kernels";
+			this.listBox_kernels.Size = new Size(120, 274);
+			this.listBox_kernels.TabIndex = 5;
+			// 
+			// panel_kernelParams
+			// 
+			this.panel_kernelParams.Location = new Point(436, 530);
+			this.panel_kernelParams.Name = "panel_kernelParams";
+			this.panel_kernelParams.Size = new Size(386, 274);
+			this.panel_kernelParams.TabIndex = 6;
+			// 
 			// MainView
 			// 
 			this.AutoScaleDimensions = new SizeF(7F, 15F);
 			this.AutoScaleMode = AutoScaleMode.Font;
 			this.ClientSize = new Size(834, 961);
+			this.Controls.Add(this.panel_kernelParams);
+			this.Controls.Add(this.listBox_kernels);
 			this.Controls.Add(this.panel_main);
 			this.Controls.Add(this.listBox_images);
 			this.Controls.Add(this.comboBox_devices);
@@ -105,5 +125,7 @@
 		private ListBox listBox_images;
 		private PictureBox pictureBox_view;
 		private Panel panel_main;
+		private ListBox listBox_kernels;
+		private Panel panel_kernelParams;
 	}
 }

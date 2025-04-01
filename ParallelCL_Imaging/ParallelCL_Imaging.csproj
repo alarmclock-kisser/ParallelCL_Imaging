@@ -12,8 +12,4 @@
     <PackageReference Include="OpenTK" Version="4.9.4" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Resources\Kernels\" />
-  </ItemGroup>
-
 </Project>

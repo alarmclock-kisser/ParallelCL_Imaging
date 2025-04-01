@@ -14,7 +14,7 @@ namespace ParallelCL_Imaging
 		public List<string> KernelPaths = [];
 
 
-
+		public string KernelsDir => ContextH.Repopath + "\\Resources\\Kernels\\";
 		// ----- ----- ----- LAMBDA ----- ----- ----- \\
 
 
@@ -34,7 +34,14 @@ namespace ParallelCL_Imaging
 
 
 		// ----- ----- ----- METHODS ----- ----- ----- \\
-
+		public List<string> GetKernelPaths()
+		{
+			// Get all files in directory
+			string[] files = Directory.GetFiles(this.KernelsDir, "*.cl");
+			
+			// Return list
+			return files.ToList();
+		}
 
 
 
