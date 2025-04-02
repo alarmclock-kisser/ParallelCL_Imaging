@@ -1,3 +1,5 @@
+using OpenTK.Graphics.ES11;
+
 namespace ParallelCL_Imaging
 {
 	public partial class MainView : Form
@@ -7,6 +9,10 @@ namespace ParallelCL_Imaging
 
 		public ImageHandling ImageH;
 		public OpenClContextHandling ContextH;
+
+		public ImageObject? IMG => ImageH.CurrentImage;
+		public OpenClMemoryHandling? MemH => ContextH.MemH;
+		public OpenClKernelHandling? KernelH => ContextH.KernelH;
 
 
 		// ----- ----- ----- CONSTRUCTORS ----- ----- ----- \\
@@ -26,14 +32,16 @@ namespace ParallelCL_Imaging
 			ContextH = new OpenClContextHandling(Repopath, listBox_log, comboBox_devices);
 
 			// Register events
+			listBox_log.DoubleClick += (s, e) => CopyLogLine();
 
 
-			// Select device (Intel)
-			SelectDeviceLike("Intel");
+			// Select device (Intel CPU)
+			SelectDeviceLike("Core");
 
 			// Load images resources
 			LoadResourcesImages();
 		}
+
 
 
 
@@ -102,7 +110,23 @@ namespace ParallelCL_Imaging
 		{
 			// PictureBox image
 			pictureBox_view.Image = ImageH.CurrentImage?.Img;
+
+			// Fill kernels listBox
+			KernelH?.FillKernelsListBox(listBox_kernels);
 		}
+
+		private void CopyLogLine()
+		{
+			// Get selected line
+			string line = listBox_log.SelectedItem?.ToString() ?? "";
+
+			// Copy to clipboard
+			Clipboard.SetText(line);
+
+			// MsgBox
+			MessageBox.Show("Log-line: \n\n" + line, "Copied to Clipboard", MessageBoxButtons.OK, MessageBoxIcon.Information);
+		}
+
 
 
 
@@ -113,8 +137,52 @@ namespace ParallelCL_Imaging
 			ToggleUI();
 		}
 
+		private void button_move_Click(object sender, EventArgs e)
+		{
+			// Abort if no IMG or no MemH
+			if (IMG == null || MemH == null)
+			{
+				MessageBox.Show("No image or memory", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				return;
+			}
 
+			// Move image between host and device
+			if (IMG.OnHost)
+			{
+				// Move to device
+				var bytes = IMG.GetPixelsAsBytes();
 
+				IMG.Ptr = MemH.PushChunks([bytes]);
+				IMG.ClearImage();
 
+				// Log with MemH
+				MemH.Log("Image moved to device", (bytes.LongLength / 4).ToString("N0") + " pixels", 1);
+			}
+			else
+			{
+				// Move to host
+				var bytes = MemH.PullChunks<byte>(IMG.Ptr).FirstOrDefault();
+
+				IMG.SetImageFromBytes(bytes ?? []);
+				IMG.Ptr = 0;
+
+				// Log with MemH
+				MemH.Log("Image moved to host", ((bytes?.LongLength ?? 4) / 4).ToString("N0") + " pixels", 1);
+
+			}
+
+			// Update UI
+			ToggleUI();
+		}
+
+		private void listBox_kernels_SelectedIndexChanged(object sender, EventArgs e)
+		{
+			// Set kernel
+			KernelH?.SetKernel(listBox_kernels.SelectedItem?.ToString() ?? "");
+
+			// Get params from kernel
+			string[]? parameters = KernelH?.GetKernelParams();
+
+		}
 	}
 }

@@ -8,9 +8,9 @@ __kernel void TestParamsKernel(__global uchar* pixels, int r, int g, int b, floa
     uchar originalA = pixels[i + 3];
 
     // Apply the filter
-    uchar newR = clamp(originalR + r, 0, 255);
-    uchar newG = clamp(originalG + g, 0, 255);
-    uchar newB = clamp(originalB + b, 0, 255);
+    float newR = (float)clamp((int)originalR + r, 0, 255);
+    float newG = (float)clamp((int)originalG + g, 0, 255);
+    float newB = (float)clamp((int)originalB + b, 0, 255);
 
     // Apply hue shift (simplified example)
     float hue = atan2(sqrt(3.0f) * (newG - newB), 2.0f * newR - newG - newB);
@@ -22,8 +22,8 @@ __kernel void TestParamsKernel(__global uchar* pixels, int r, int g, int b, floa
     newB = chroma * cos(hue + 2.0f * M_PI / 3.0f);
 
     // Store the new color components back to the pixel array
-    pixels[i] = clamp(newR, 0, 255);
-    pixels[i + 1] = clamp(newG, 0, 255);
-    pixels[i + 2] = clamp(newB, 0, 255);
+    pixels[i] = (uchar)clamp((int)newR, 0, 255);
+    pixels[i + 1] = (uchar)clamp((int)newG, 0, 255);
+    pixels[i + 2] = (uchar)clamp((int)newB, 0, 255);
     pixels[i + 3] = originalA; // Preserve the alpha channel
 }

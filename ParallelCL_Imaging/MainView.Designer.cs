@@ -35,6 +35,7 @@
 			this.panel_main = new Panel();
 			this.listBox_kernels = new ListBox();
 			this.panel_kernelParams = new Panel();
+			this.button_move = new Button();
 			((System.ComponentModel.ISupportInitialize) this.pictureBox_view).BeginInit();
 			this.panel_main.SuspendLayout();
 			this.SuspendLayout();
@@ -88,21 +89,33 @@
 			this.listBox_kernels.ItemHeight = 15;
 			this.listBox_kernels.Location = new Point(310, 530);
 			this.listBox_kernels.Name = "listBox_kernels";
-			this.listBox_kernels.Size = new Size(120, 274);
+			this.listBox_kernels.Size = new Size(163, 274);
 			this.listBox_kernels.TabIndex = 5;
+			this.listBox_kernels.SelectedIndexChanged += this.listBox_kernels_SelectedIndexChanged;
 			// 
 			// panel_kernelParams
 			// 
-			this.panel_kernelParams.Location = new Point(436, 530);
+			this.panel_kernelParams.Location = new Point(479, 530);
 			this.panel_kernelParams.Name = "panel_kernelParams";
-			this.panel_kernelParams.Size = new Size(386, 274);
+			this.panel_kernelParams.Size = new Size(343, 274);
 			this.panel_kernelParams.TabIndex = 6;
+			// 
+			// button_move
+			// 
+			this.button_move.Location = new Point(229, 651);
+			this.button_move.Name = "button_move";
+			this.button_move.Size = new Size(75, 23);
+			this.button_move.TabIndex = 7;
+			this.button_move.Text = "Move";
+			this.button_move.UseVisualStyleBackColor = true;
+			this.button_move.Click += this.button_move_Click;
 			// 
 			// MainView
 			// 
 			this.AutoScaleDimensions = new SizeF(7F, 15F);
 			this.AutoScaleMode = AutoScaleMode.Font;
 			this.ClientSize = new Size(834, 961);
+			this.Controls.Add(this.button_move);
 			this.Controls.Add(this.panel_kernelParams);
 			this.Controls.Add(this.listBox_kernels);
 			this.Controls.Add(this.panel_main);
@@ -127,5 +140,6 @@
 		private Panel panel_main;
 		private ListBox listBox_kernels;
 		private Panel panel_kernelParams;
+		private Button button_move;
 	}
 }

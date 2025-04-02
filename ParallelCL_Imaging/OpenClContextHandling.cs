@@ -19,7 +19,7 @@ namespace ParallelCL_Imaging
 		public CLDevice? Dev = null;
 
 		public OpenClMemoryHandling? MemH;
-		public OpenClKernelHandlingOld? KernelH;
+		public OpenClKernelHandling? KernelH;
 
 
 
@@ -158,7 +158,7 @@ namespace ParallelCL_Imaging
 			}
 
 			// Convert to string
-			return Encoding.ASCII.GetString(name).Trim();
+			return Encoding.ASCII.GetString(name).Trim('\0');
 
 		}
 
@@ -173,7 +173,7 @@ namespace ParallelCL_Imaging
 			}
 
 			// Convert to string
-			return Encoding.ASCII.GetString(type).Trim();
+			return Encoding.ASCII.GetString(type).Trim('\0');
 		}
 
 		public string GetPlatformName(CLPlatform platform)
@@ -187,7 +187,7 @@ namespace ParallelCL_Imaging
 			}
 
 			// Convert to string
-			return Encoding.ASCII.GetString(name).Trim();
+			return Encoding.ASCII.GetString(name).Trim('\0');
 		}
 
 		public string GetPlatformVersion(CLPlatform platform)
@@ -201,7 +201,7 @@ namespace ParallelCL_Imaging
 			}
 
 			// Convert to string
-			return Encoding.ASCII.GetString(version).Trim();
+			return Encoding.ASCII.GetString(version).Trim('\0');
 		}
 
 		public List<string> GetDeviceNames()
@@ -250,7 +250,7 @@ namespace ParallelCL_Imaging
 
 			// Create objects
 			this.MemH = new OpenClMemoryHandling(this);
-			this.KernelH = new OpenClKernelHandlingOld(this);
+			this.KernelH = new OpenClKernelHandling(this);
 
 			// Log
 			this.Log("OpenCL Context initialized", this.GetDeviceName(this.Dev.Value), 1);

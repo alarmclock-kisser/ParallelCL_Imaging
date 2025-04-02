@@ -132,8 +132,8 @@ namespace ParallelCL_Imaging
 
 		public Image? Img = null;
 
-		public int Width => this.Img?.Width ?? 0;
-		public int Height => this.Img?.Height ?? 0;
+		public int Width = 0;
+		public int Height = 0;
 
 		public long Size => this.Width * this.Height * 4;
 
@@ -142,6 +142,8 @@ namespace ParallelCL_Imaging
 		{
 			this.Name = name;
 			this.Img = img;
+			Width = img?.Width ?? 0;
+			Height = img?.Height ?? 0;
 		}
 
 		public ImageObject(string name, int ptr)
@@ -158,6 +160,7 @@ namespace ParallelCL_Imaging
 		{
 			this.Img?.Dispose();
 			this.Img = null;
+			this.Ptr = 0;
 		}
 
 		public void ClearImage()
@@ -198,6 +201,34 @@ namespace ParallelCL_Imaging
 			return rows;
 		}
 
+		public byte[] GetPixelsAsBytes()
+		{
+			byte[] pixels = new byte[this.Size];
+			if (this.Img == null)
+			{
+				return pixels;
+			}
+
+			// New bitmap from image
+			Bitmap bmp = new(this.Img);
+
+			// Lock, copy, unlock
+			Rectangle rect = new(0, 0, bmp.Width, bmp.Height);
+			BitmapData bmpData = bmp.LockBits(rect, ImageLockMode.ReadOnly, bmp.PixelFormat);
+
+			// Copy
+			System.Runtime.InteropServices.Marshal.Copy(bmpData.Scan0, pixels, 0, pixels.Length);
+
+			// Unlock
+			bmp.UnlockBits(bmpData);
+
+			// Dispose bitmap
+			bmp.Dispose();
+
+			// Return byte[]
+			return pixels;
+		}
+
 		public Image? SetImageFromChunks(List<byte[]> rows)
 		{
 			// Get dimensions from rows
@@ -235,6 +266,38 @@ namespace ParallelCL_Imaging
 			this.Ptr = 0;
 
 			// Return image
+			return bmp;
+		}
+
+		public Image? SetImageFromBytes(byte[] bytes)
+		{
+			// Get dimensions from prior
+			int width = this.Width;
+			int height = this.Height;
+
+			// Check dimensions
+			if (width < 1 || height < 1)
+			{
+				this.Ptr = 0;
+				this.Img = null;
+				return null;
+			}
+
+			// New bitmap
+			Bitmap bmp = new(width, height, PixelFormat.Format32bppArgb);
+
+			// Lock, copy, unlock
+			Rectangle rect = new(0, 0, bmp.Width, bmp.Height);
+			BitmapData bmpData = bmp.LockBits(rect, ImageLockMode.WriteOnly, bmp.PixelFormat);
+
+			// Copy
+			System.Runtime.InteropServices.Marshal.Copy(bytes, 0, bmpData.Scan0, bytes.Length);
+			bmp.UnlockBits(bmpData);
+
+			// Update image
+			this.Img = bmp;
+			this.Ptr = 0;
+
 			return bmp;
 		}
 
