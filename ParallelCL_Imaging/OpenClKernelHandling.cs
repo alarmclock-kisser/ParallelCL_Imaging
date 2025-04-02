@@ -357,7 +357,7 @@ namespace ParallelCL_Imaging
 			return parameters;
 		}
 
-		public long ExecuteKernel(long indexPointer, object[] args)
+		public long Execute(long indexPointer, object[] args)
 		{
 			// Check if Kernel and Memory Handler exist with Que
 			if (this.Kernel == null || this.MemH == null || this.MemH.Que == null || indexPointer == 0)
@@ -429,32 +429,72 @@ namespace ParallelCL_Imaging
 					{
 						if (argsArrayIndex < args.Length)
 						{
-							this.Log($"Type of args[{argsArrayIndex}]:", args[argsArrayIndex]?.GetType().ToString());
-							if (parameters[j].ToLower().Contains("float") && args[argsArrayIndex] is float floatValue)
+							object argValue = args[argsArrayIndex];
+
+							if (argValue is decimal decValue)
 							{
-								CL.SetKernelArg(this.Kernel.Value, (uint) j, floatValue);
+								// Cast von decimal nach float oder double, je nach Kernel-Typ
+								if (parameters[j].ToLower().Contains("float"))
+								{
+									argValue = (float) decValue;
+								}
+								else if (parameters[j].ToLower().Contains("double"))
+								{
+									argValue = (double) decValue;
+								}
 							}
-							else if (parameters[j].Contains("double") && args[argsArrayIndex] is double doubleValue)
+
+							this.Log($"Type of args[{argsArrayIndex}]:", argValue?.GetType().ToString());
+
+							if (parameters[j].ToLower().Contains("float"))
 							{
-								CL.SetKernelArg(this.Kernel.Value, (uint) j, doubleValue);
+								CL.SetKernelArg(this.Kernel.Value, (uint) j, (float) argValue);
 							}
-							else if (parameters[j].Contains("int") && args[argsArrayIndex] is int intValue)
+							else if (parameters[j].ToLower().Contains("double"))
 							{
-								CL.SetKernelArg(this.Kernel.Value, (uint) j, intValue);
+								CL.SetKernelArg(this.Kernel.Value, (uint) j, (double) argValue);
 							}
-							else if (parameters[j].Contains("long") && args[argsArrayIndex] is long longValue)
+							else if (parameters[j].Contains("int"))
 							{
-								CL.SetKernelArg(this.Kernel.Value, (uint) j, longValue);
+								if (argValue is int intValue)
+								{
+									CL.SetKernelArg(this.Kernel.Value, (uint) j, intValue);
+								}
+								else if (argValue is long longValue)
+								{
+									CL.SetKernelArg(this.Kernel.Value, (uint) j, (int) longValue);
+								}
+								else if (argValue is decimal decValue3)
+								{
+									CL.SetKernelArg(this.Kernel.Value, (uint) j, (int) decValue3);
+								}
+								else
+								{
+									this.Log($"Error setting kernel argument at index {j} ({parameters[j]})", "Expected int but got " + argValue?.GetType());
+									return indexPointer;
+								}
 							}
-							else if (parameters[j].Contains("float") && args[argsArrayIndex] is decimal decimalValue)
+							else if (parameters[j].Contains("long"))
 							{
-								CL.SetKernelArg(this.Kernel.Value, (uint) j, decimalValue);
+								if (argValue is long longValue)
+								{
+									CL.SetKernelArg(this.Kernel.Value, (uint) j, longValue);
+								}
+								else if (argValue is int intValue)
+								{
+									CL.SetKernelArg(this.Kernel.Value, (uint) j, (long) intValue);
+								}
+								else if (argValue is decimal decValue2)
+								{
+									CL.SetKernelArg(this.Kernel.Value, (uint) j, (long) decValue2);
+								}
+								else
+								{
+									this.Log($"Error setting kernel argument at index {j} ({parameters[j]})", "Expected long but got " + argValue?.GetType());
+									return indexPointer;
+								}
 							}
-							else
-							{
-								this.Log($"Error setting kernel argument at index {j} ({parameters[j]})", $"Type mismatch or value not provided in args at index {argsArrayIndex}");
-								return indexPointer;
-							}
+
 							argsArrayIndex++;
 						}
 						else
@@ -481,6 +521,13 @@ namespace ParallelCL_Imaging
 			return indexPointer;
 		}
 
+		public long ExecuteKernel(string kernelName, long indexPointer, object[] args)
+		{
+			// Set kernel
+			this.SetKernel(kernelName);
 
+			// Execute
+			return this.Execute(indexPointer, args);
+		}
 	}
 }

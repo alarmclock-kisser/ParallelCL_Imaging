@@ -1,5 +1,6 @@
 using OpenTK.Graphics.ES11;
 using System.Drawing.Imaging;
+using System.Windows.Forms;
 
 namespace ParallelCL_Imaging
 {
@@ -16,6 +17,10 @@ namespace ParallelCL_Imaging
 		public OpenClMemoryHandling? MemH => ContextH.MemH;
 		public OpenClKernelHandling? KernelH => ContextH.KernelH;
 
+
+		private int oldZoom = 100;
+		private Point mouseDownLocation;
+		private bool isDragging = false;
 
 		// ----- ----- ----- CONSTRUCTORS ----- ----- ----- \\
 		public MainView()
@@ -36,6 +41,10 @@ namespace ParallelCL_Imaging
 
 			// Register events
 			listBox_log.DoubleClick += (s, e) => CopyLogLine();
+			this.pictureBox_view.MouseWheel += this.pictureBox_view_MouseWheel;
+			this.pictureBox_view.MouseDown += this.pictureBox_view_MouseDown;
+			this.pictureBox_view.MouseMove += this.pictureBox_view_MouseMove;
+			this.pictureBox_view.MouseUp += this.pictureBox_view_MouseUp;
 
 
 			// Select device (Intel CPU)
@@ -111,11 +120,28 @@ namespace ParallelCL_Imaging
 
 		public void ToggleUI()
 		{
-			// PictureBox image
-			pictureBox_view.Image = ImageH.CurrentImage?.Img;
+			// PictureBox
+			this.pictureBox_view.Image = this.ImageH.CurrentImage?.Img;
+			this.pictureBox_view.SizeMode = PictureBoxSizeMode.Zoom;
+
+			// Zoom (change size of PictureBox))
+			this.oldZoom = (int) this.numericUpDown_zoom.Value;
+			this.pictureBox_view.Width = (int) (this.ImageH.CurrentImage?.Img?.Width * this.oldZoom / 100.0 ?? 1);
+			this.pictureBox_view.Height = (int) (this.ImageH.CurrentImage?.Img?.Height * this.oldZoom / 100.0 ?? 1);
 
 			// Fill kernels listBox
 			KernelH?.FillKernelsListBox(listBox_kernels);
+
+			// Set label current kernel
+			label_currentKernel.Text = KernelH?.KernelName ?? "No kernel selected";
+			label_currentKernel.ForeColor = KernelH?.KernelName == null ? Color.Black : Color.DarkGreen;
+
+			// Execute button
+			button_execute.Enabled = KernelH != null && IMG != null && (IMG.OnHost || IMG.OnDevice);
+
+			// Move button
+			button_move.Enabled = IMG != null;
+			button_move.Text = IMG?.OnHost ?? false ? "-> Device" : "Host <-";
 		}
 
 		private void CopyLogLine()
@@ -129,6 +155,7 @@ namespace ParallelCL_Imaging
 			// MsgBox
 			MessageBox.Show("Log-line: \n\n" + line, "Copied to Clipboard", MessageBoxButtons.OK, MessageBoxIcon.Information);
 		}
+
 
 
 
@@ -189,6 +216,9 @@ namespace ParallelCL_Imaging
 
 			// Fill params panel
 			GuiB.FillParams(parameters ?? []);
+
+			// Update UI
+			ToggleUI();
 		}
 
 		private void button_execute_Click(object sender, EventArgs e)
@@ -221,7 +251,7 @@ namespace ParallelCL_Imaging
 			}
 
 			// Execute kernel
-			IMG.Ptr = KernelH.ExecuteKernel(ptr, parameters);
+			IMG.Ptr = KernelH.Execute(ptr, parameters);
 
 			// Push back if moved
 			if (pushBack)
@@ -260,6 +290,64 @@ namespace ParallelCL_Imaging
 			{
 				// Save image
 				IMG.Img?.Save(sfd.FileName, ImageFormat.Bmp);
+			}
+		}
+
+		private void numericUpDown_zoom_ValueChanged(object sender, EventArgs e)
+		{
+			this.ToggleUI();
+		}
+
+		// Dragging & zoom
+		private void pictureBox_view_MouseDown(object? sender, MouseEventArgs e)
+		{
+			if (e.Button == MouseButtons.Left)
+			{
+				this.isDragging = true;
+				this.mouseDownLocation = e.Location;
+				this.pictureBox_view.Cursor = Cursors.Hand;
+			}
+		}
+
+		private void pictureBox_view_MouseMove(object? sender, MouseEventArgs e)
+		{
+			if (this.isDragging)
+			{
+				// Neue Position berechnen
+				int dx = e.X - this.mouseDownLocation.X;
+				int dy = e.Y - this.mouseDownLocation.Y;
+				this.pictureBox_view.Left += dx;
+				this.pictureBox_view.Top += dy;
+			}
+		}
+
+		private void pictureBox_view_MouseUp(object? sender, MouseEventArgs e)
+		{
+			if (e.Button == MouseButtons.Left)
+			{
+				this.isDragging = false;
+				this.pictureBox_view.Cursor = Cursors.Default;
+			}
+		}
+
+		private void pictureBox_view_MouseWheel(object? sender, MouseEventArgs e)
+		{
+			int zoomChange = e.Delta > 0 ? 5 : -5;
+			int newZoom = Math.Max((int) this.numericUpDown_zoom.Minimum, Math.Min((int) this.numericUpDown_zoom.Maximum, this.oldZoom + zoomChange));
+
+			this.numericUpDown_zoom.Value = newZoom;
+		}
+
+		private void button_recenter_Click(object sender, EventArgs e)
+		{
+			// Center image
+			this.pictureBox_view.Left = (this.panel_main.Width - this.pictureBox_view.Width) / 2;
+			this.pictureBox_view.Top = (this.panel_main.Height - this.pictureBox_view.Height) / 2;
+
+			// Reset zoom if CTRL pressed
+			if (Control.ModifierKeys == Keys.Control)
+			{
+				this.numericUpDown_zoom.Value = 100;
 			}
 		}
 	}

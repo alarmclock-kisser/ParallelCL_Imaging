@@ -38,8 +38,12 @@
 			this.button_move = new Button();
 			this.button_execute = new Button();
 			this.button_export = new Button();
+			this.numericUpDown_zoom = new NumericUpDown();
+			this.button_recenter = new Button();
+			this.label_currentKernel = new Label();
 			((System.ComponentModel.ISupportInitialize) this.pictureBox_view).BeginInit();
 			this.panel_main.SuspendLayout();
+			((System.ComponentModel.ISupportInitialize) this.numericUpDown_zoom).BeginInit();
 			this.SuspendLayout();
 			// 
 			// listBox_log
@@ -89,17 +93,17 @@
 			// 
 			this.listBox_kernels.FormattingEnabled = true;
 			this.listBox_kernels.ItemHeight = 15;
-			this.listBox_kernels.Location = new Point(310, 530);
+			this.listBox_kernels.Location = new Point(310, 545);
 			this.listBox_kernels.Name = "listBox_kernels";
-			this.listBox_kernels.Size = new Size(163, 274);
+			this.listBox_kernels.Size = new Size(163, 259);
 			this.listBox_kernels.TabIndex = 5;
 			this.listBox_kernels.SelectedIndexChanged += this.listBox_kernels_SelectedIndexChanged;
 			// 
 			// panel_kernelParams
 			// 
-			this.panel_kernelParams.Location = new Point(479, 530);
+			this.panel_kernelParams.Location = new Point(479, 559);
 			this.panel_kernelParams.Name = "panel_kernelParams";
-			this.panel_kernelParams.Size = new Size(343, 245);
+			this.panel_kernelParams.Size = new Size(343, 216);
 			this.panel_kernelParams.TabIndex = 6;
 			// 
 			// button_move
@@ -132,11 +136,44 @@
 			this.button_export.UseVisualStyleBackColor = true;
 			this.button_export.Click += this.button_export_Click;
 			// 
+			// numericUpDown_zoom
+			// 
+			this.numericUpDown_zoom.Location = new Point(747, 530);
+			this.numericUpDown_zoom.Maximum = new decimal(new int[] { 1000, 0, 0, 0 });
+			this.numericUpDown_zoom.Minimum = new decimal(new int[] { 5, 0, 0, 0 });
+			this.numericUpDown_zoom.Name = "numericUpDown_zoom";
+			this.numericUpDown_zoom.Size = new Size(75, 23);
+			this.numericUpDown_zoom.TabIndex = 10;
+			this.numericUpDown_zoom.Value = new decimal(new int[] { 100, 0, 0, 0 });
+			this.numericUpDown_zoom.ValueChanged += this.numericUpDown_zoom_ValueChanged;
+			// 
+			// button_recenter
+			// 
+			this.button_recenter.Location = new Point(666, 530);
+			this.button_recenter.Name = "button_recenter";
+			this.button_recenter.Size = new Size(75, 23);
+			this.button_recenter.TabIndex = 11;
+			this.button_recenter.Text = "Re-center";
+			this.button_recenter.UseVisualStyleBackColor = true;
+			this.button_recenter.Click += this.button_recenter_Click;
+			// 
+			// label_currentKernel
+			// 
+			this.label_currentKernel.AutoSize = true;
+			this.label_currentKernel.Location = new Point(310, 527);
+			this.label_currentKernel.Name = "label_currentKernel";
+			this.label_currentKernel.Size = new Size(79, 15);
+			this.label_currentKernel.TabIndex = 12;
+			this.label_currentKernel.Text = "Kernel loaded";
+			// 
 			// MainView
 			// 
 			this.AutoScaleDimensions = new SizeF(7F, 15F);
 			this.AutoScaleMode = AutoScaleMode.Font;
 			this.ClientSize = new Size(834, 961);
+			this.Controls.Add(this.label_currentKernel);
+			this.Controls.Add(this.button_recenter);
+			this.Controls.Add(this.numericUpDown_zoom);
 			this.Controls.Add(this.button_export);
 			this.Controls.Add(this.button_execute);
 			this.Controls.Add(this.button_move);
@@ -152,7 +189,9 @@
 			this.Text = "Form1";
 			((System.ComponentModel.ISupportInitialize) this.pictureBox_view).EndInit();
 			this.panel_main.ResumeLayout(false);
+			((System.ComponentModel.ISupportInitialize) this.numericUpDown_zoom).EndInit();
 			this.ResumeLayout(false);
+			this.PerformLayout();
 		}
 
 		#endregion
@@ -167,5 +206,8 @@
 		private Button button_move;
 		private Button button_execute;
 		private Button button_export;
+		private NumericUpDown numericUpDown_zoom;
+		private Button button_recenter;
+		private Label label_currentKernel;
 	}
 }
