@@ -36,6 +36,7 @@
 			this.listBox_kernels = new ListBox();
 			this.panel_kernelParams = new Panel();
 			this.button_move = new Button();
+			this.button_execute = new Button();
 			((System.ComponentModel.ISupportInitialize) this.pictureBox_view).BeginInit();
 			this.panel_main.SuspendLayout();
 			this.SuspendLayout();
@@ -97,7 +98,7 @@
 			// 
 			this.panel_kernelParams.Location = new Point(479, 530);
 			this.panel_kernelParams.Name = "panel_kernelParams";
-			this.panel_kernelParams.Size = new Size(343, 274);
+			this.panel_kernelParams.Size = new Size(343, 245);
 			this.panel_kernelParams.TabIndex = 6;
 			// 
 			// button_move
@@ -110,11 +111,22 @@
 			this.button_move.UseVisualStyleBackColor = true;
 			this.button_move.Click += this.button_move_Click;
 			// 
+			// button_execute
+			// 
+			this.button_execute.Location = new Point(479, 781);
+			this.button_execute.Name = "button_execute";
+			this.button_execute.Size = new Size(75, 23);
+			this.button_execute.TabIndex = 8;
+			this.button_execute.Text = "Execute";
+			this.button_execute.UseVisualStyleBackColor = true;
+			this.button_execute.Click += this.button_execute_Click;
+			// 
 			// MainView
 			// 
 			this.AutoScaleDimensions = new SizeF(7F, 15F);
 			this.AutoScaleMode = AutoScaleMode.Font;
 			this.ClientSize = new Size(834, 961);
+			this.Controls.Add(this.button_execute);
 			this.Controls.Add(this.button_move);
 			this.Controls.Add(this.panel_kernelParams);
 			this.Controls.Add(this.listBox_kernels);
@@ -141,5 +153,6 @@
 		private ListBox listBox_kernels;
 		private Panel panel_kernelParams;
 		private Button button_move;
+		private Button button_execute;
 	}
 }

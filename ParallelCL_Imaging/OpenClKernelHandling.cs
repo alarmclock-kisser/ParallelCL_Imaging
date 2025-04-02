@@ -10,6 +10,7 @@ namespace ParallelCL_Imaging
 		private ListBox LogBox => this.ContextH.LogBox;
 
 		public OpenClContextHandling ContextH;
+		public OpenClMemoryHandling? MemH => this.ContextH.MemH;
 		private CLContext? Ctx => this.ContextH.Ctx;
 		private CLDevice? Dev => this.ContextH.Dev;
 
@@ -69,7 +70,7 @@ namespace ParallelCL_Imaging
 		{
 			// Get all files in directory
 			string[] files = Directory.GetFiles(this.KernelsDir, "*.cl");
-			
+
 			// Return list
 			return files.ToList();
 		}
@@ -305,10 +306,10 @@ namespace ParallelCL_Imaging
 		{
 			// Set kernel name
 			this.KernelName = kernelName;
-			
+
 			// Load kernel source
 			this.KernelSource = File.ReadAllText(this.KernelsDir + kernelName + ".cl");
-			
+
 			// Create kernel
 			this.Kernel = CompileKernel(this.KernelSource);
 		}
@@ -317,10 +318,10 @@ namespace ParallelCL_Imaging
 		{
 			// Clear
 			listBox.Items.Clear();
-			
+
 			// Get all files in directory
 			string[] files = Directory.GetFiles(this.KernelsDir, "*.cl");
-			
+
 			// Add to listbox
 			foreach (string file in files)
 			{
@@ -354,5 +355,98 @@ namespace ParallelCL_Imaging
 			// Return
 			return parameters;
 		}
+
+		public long ExecuteKernel(long indexPointer, object[] args)
+		{
+			// Check if Kernel and Memory Handler exist with Que
+			if (this.Kernel == null || this.MemH == null || this.MemH.Que == null)
+			{
+				this.Log("Error executing kernel", "Kernel or MemH is null");
+				return 0;
+			}
+
+			// Get Kernel parameter order
+			string[] parameters = this.GetKernelParams();
+
+			// Get Buffers and their lengths
+			CLBuffer[] buffers = this.MemH.FindBuffers(indexPointer);
+			long[] lengths = this.MemH.FindLengths(indexPointer).Select(s => (long) s).ToArray();
+
+			if (buffers.Length == 0 || lengths.Length == 0)
+			{
+				this.Log("Error executing kernel", "No buffers or lengths found for indexPointer");
+				return 0;
+			}
+
+			// Identify input buffer and length parameter positions
+			int inputBufferIndex = Array.FindIndex(parameters, x => x.Contains("__global"));
+			int lengthIndex = Array.FindIndex(parameters, x => x.Contains("int") || x.Contains("long"));
+
+			if (inputBufferIndex == -1 || lengthIndex == -1)
+			{
+				this.Log("Error executing kernel", "Could not find required parameters (__global buffer, int/long length)");
+				return 0;
+			}
+
+			// Apply Kernel on all found buffers (IN-PLACE!)
+			for (int i = 0; i < buffers.Length; i++)
+			{
+				// Set input buffer
+				CL.SetKernelArg(this.Kernel.Value, (uint) inputBufferIndex, (IntPtr) buffers[i].Handle);
+
+				// Set length parameter (int or long)
+				if (parameters[lengthIndex].Contains("int"))
+				{
+					int len = (int) lengths[i];
+					CL.SetKernelArg(this.Kernel.Value, (uint) lengthIndex, len);
+				}
+				else
+				{
+					CL.SetKernelArg(this.Kernel.Value, (uint) lengthIndex, lengths[i]);
+				}
+
+				// Set additional arguments
+				int argIndex = 0;
+				for (int j = 0; j < args.Length; j++)
+				{
+					if (j == inputBufferIndex || j == lengthIndex)
+						continue;
+
+					if (args[j] is int intValue)
+					{
+						CL.SetKernelArg(this.Kernel.Value, (uint) argIndex, intValue);
+					}
+					else if (args[j] is long longValue)
+					{
+						CL.SetKernelArg(this.Kernel.Value, (uint) argIndex, longValue);
+					}
+					else if (args[j] is float floatValue)
+					{
+						CL.SetKernelArg(this.Kernel.Value, (uint) argIndex, floatValue);
+					}
+					else if (args[j] is double doubleValue)
+					{
+						CL.SetKernelArg(this.Kernel.Value, (uint) argIndex, doubleValue);
+					}
+					else
+					{
+						this.Log($"Error setting kernel argument at index {argIndex}", "Unsupported type");
+						return 0;
+					}
+
+					argIndex++;
+				}
+
+				// Execute Kernel (In-Place) for this buffer
+				CL.EnqueueNDRangeKernel(this.MemH.Que.Value, this.Kernel.Value, 1, null, [(nuint) lengths[i]], null, 0, null, out CLEvent _);
+			}
+
+			// Return original indexPointer (since processing was in-place)
+			return indexPointer;
+		}
+
+
+
+
 	}
 }

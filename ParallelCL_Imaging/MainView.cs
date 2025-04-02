@@ -189,5 +189,22 @@ namespace ParallelCL_Imaging
 			// Fill params panel
 			GuiB.FillParams(parameters ?? []);
 		}
+
+		private void button_execute_Click(object sender, EventArgs e)
+		{
+			// Abort if no IMG or no KernelH
+			if (IMG == null || KernelH == null)
+			{
+				MessageBox.Show("No image or kernel", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				return;
+			}
+
+			// Get params from panel + pointer + length
+			long ptr = IMG.Ptr;
+			object[] parameters = GuiB.GetParams();
+
+			// Execute kernel
+			IMG.Ptr = KernelH.ExecuteKernel(ptr, parameters);
+		}
 	}
 }
