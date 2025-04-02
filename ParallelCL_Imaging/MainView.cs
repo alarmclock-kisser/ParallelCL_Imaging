@@ -8,6 +8,7 @@ namespace ParallelCL_Imaging
 		public string Repopath;
 
 		public ImageHandling ImageH;
+		public GuiBuilder GuiB;
 		public OpenClContextHandling ContextH;
 
 		public ImageObject? IMG => ImageH.CurrentImage;
@@ -29,6 +30,7 @@ namespace ParallelCL_Imaging
 
 			// Init. objects
 			ImageH = new ImageHandling(Repopath, listBox_images);
+			GuiB = new GuiBuilder(this);
 			ContextH = new OpenClContextHandling(Repopath, listBox_log, comboBox_devices);
 
 			// Register events
@@ -180,9 +182,12 @@ namespace ParallelCL_Imaging
 			// Set kernel
 			KernelH?.SetKernel(listBox_kernels.SelectedItem?.ToString() ?? "");
 
-			// Get params from kernel
+			// Get params from kernel + log count
 			string[]? parameters = KernelH?.GetKernelParams();
+			KernelH?.Log("Kernel parameters", parameters?.Length.ToString() ?? "0", 1);
 
+			// Fill params panel
+			GuiB.FillParams(parameters ?? []);
 		}
 	}
 }

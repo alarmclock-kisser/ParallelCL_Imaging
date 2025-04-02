@@ -1,4 +1,4 @@
-__kernel void TestParamsKernel(__global uchar* pixels, int r, int g, int b, float hueShift) {
+__kernel void TestParamsKernel(__global uchar* pixels, int length, int r, int g, int b, float hueShift) {
     int i = get_global_id(0) * 4; // Assuming each pixel is represented by 4 bytes (RGBA)
 
     // Extract the original color components
