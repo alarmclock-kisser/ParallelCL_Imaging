@@ -37,6 +37,7 @@
 			this.panel_kernelParams = new Panel();
 			this.button_move = new Button();
 			this.button_execute = new Button();
+			this.button_export = new Button();
 			((System.ComponentModel.ISupportInitialize) this.pictureBox_view).BeginInit();
 			this.panel_main.SuspendLayout();
 			this.SuspendLayout();
@@ -121,11 +122,22 @@
 			this.button_execute.UseVisualStyleBackColor = true;
 			this.button_execute.Click += this.button_execute_Click;
 			// 
+			// button_export
+			// 
+			this.button_export.Location = new Point(12, 651);
+			this.button_export.Name = "button_export";
+			this.button_export.Size = new Size(75, 23);
+			this.button_export.TabIndex = 9;
+			this.button_export.Text = "Export";
+			this.button_export.UseVisualStyleBackColor = true;
+			this.button_export.Click += this.button_export_Click;
+			// 
 			// MainView
 			// 
 			this.AutoScaleDimensions = new SizeF(7F, 15F);
 			this.AutoScaleMode = AutoScaleMode.Font;
 			this.ClientSize = new Size(834, 961);
+			this.Controls.Add(this.button_export);
 			this.Controls.Add(this.button_execute);
 			this.Controls.Add(this.button_move);
 			this.Controls.Add(this.panel_kernelParams);
@@ -154,5 +166,6 @@
 		private Panel panel_kernelParams;
 		private Button button_move;
 		private Button button_execute;
+		private Button button_export;
 	}
 }

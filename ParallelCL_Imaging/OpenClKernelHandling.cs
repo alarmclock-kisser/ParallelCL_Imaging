@@ -1,5 +1,6 @@
 ﻿using OpenTK.Compute.OpenCL;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Text;
 
 namespace ParallelCL_Imaging
@@ -359,9 +360,9 @@ namespace ParallelCL_Imaging
 		public long ExecuteKernel(long indexPointer, object[] args)
 		{
 			// Check if Kernel and Memory Handler exist with Que
-			if (this.Kernel == null || this.MemH == null || this.MemH.Que == null)
+			if (this.Kernel == null || this.MemH == null || this.MemH.Que == null || indexPointer == 0)
 			{
-				this.Log("Error executing kernel", "Kernel or MemH is null");
+				this.Log("Error executing kernel", "Kernel or MemH or Pointer is null");
 				return 0;
 			}
 
@@ -379,14 +380,29 @@ namespace ParallelCL_Imaging
 			}
 
 			// Identify input buffer and length parameter positions
-			int inputBufferIndex = Array.FindIndex(parameters, x => x.Contains("__global"));
-			int lengthIndex = Array.FindIndex(parameters, x => x.Contains("int") || x.Contains("long"));
+			int inputBufferIndex = -1;
+			int lengthIndex = -1;
+
+			for (int i = 0; i < parameters.Length; i++)
+			{
+				if (parameters[i].Contains("__global"))
+				{
+					inputBufferIndex = i;
+				}
+				else if (parameters[i].Contains("int") || parameters[i].Contains("long"))
+				{
+					lengthIndex = i;
+				}
+			}
 
 			if (inputBufferIndex == -1 || lengthIndex == -1)
 			{
 				this.Log("Error executing kernel", "Could not find required parameters (__global buffer, int/long length)");
 				return 0;
 			}
+
+			// Stopwatch start
+			Stopwatch sw = Stopwatch.StartNew();
 
 			// Apply Kernel on all found buffers (IN-PLACE!)
 			for (int i = 0; i < buffers.Length; i++)
@@ -406,46 +422,64 @@ namespace ParallelCL_Imaging
 				}
 
 				// Set additional arguments
-				int argIndex = 0;
-				for (int j = 0; j < args.Length; j++)
+				int argsArrayIndex = 0;
+				for (int j = 0; j < parameters.Length; j++)
 				{
-					if (j == inputBufferIndex || j == lengthIndex)
-						continue;
-
-					if (args[j] is int intValue)
+					if (j != inputBufferIndex && j != lengthIndex)
 					{
-						CL.SetKernelArg(this.Kernel.Value, (uint) argIndex, intValue);
+						if (argsArrayIndex < args.Length)
+						{
+							this.Log($"Type of args[{argsArrayIndex}]:", args[argsArrayIndex]?.GetType().ToString());
+							if (parameters[j].ToLower().Contains("float") && args[argsArrayIndex] is float floatValue)
+							{
+								CL.SetKernelArg(this.Kernel.Value, (uint) j, floatValue);
+							}
+							else if (parameters[j].Contains("double") && args[argsArrayIndex] is double doubleValue)
+							{
+								CL.SetKernelArg(this.Kernel.Value, (uint) j, doubleValue);
+							}
+							else if (parameters[j].Contains("int") && args[argsArrayIndex] is int intValue)
+							{
+								CL.SetKernelArg(this.Kernel.Value, (uint) j, intValue);
+							}
+							else if (parameters[j].Contains("long") && args[argsArrayIndex] is long longValue)
+							{
+								CL.SetKernelArg(this.Kernel.Value, (uint) j, longValue);
+							}
+							else if (parameters[j].Contains("float") && args[argsArrayIndex] is decimal decimalValue)
+							{
+								CL.SetKernelArg(this.Kernel.Value, (uint) j, decimalValue);
+							}
+							else
+							{
+								this.Log($"Error setting kernel argument at index {j} ({parameters[j]})", $"Type mismatch or value not provided in args at index {argsArrayIndex}");
+								return indexPointer;
+							}
+							argsArrayIndex++;
+						}
+						else
+						{
+							this.Log($"Error setting kernel argument at index {j} ({parameters[j]})", "No corresponding value found in args");
+							return indexPointer;
+						}
 					}
-					else if (args[j] is long longValue)
-					{
-						CL.SetKernelArg(this.Kernel.Value, (uint) argIndex, longValue);
-					}
-					else if (args[j] is float floatValue)
-					{
-						CL.SetKernelArg(this.Kernel.Value, (uint) argIndex, floatValue);
-					}
-					else if (args[j] is double doubleValue)
-					{
-						CL.SetKernelArg(this.Kernel.Value, (uint) argIndex, doubleValue);
-					}
-					else
-					{
-						this.Log($"Error setting kernel argument at index {argIndex}", "Unsupported type");
-						return 0;
-					}
-
-					argIndex++;
 				}
 
 				// Execute Kernel (In-Place) for this buffer
-				CL.EnqueueNDRangeKernel(this.MemH.Que.Value, this.Kernel.Value, 1, null, [(nuint) lengths[i]], null, 0, null, out CLEvent _);
+				CL.EnqueueNDRangeKernel(this.MemH.Que.Value, this.Kernel.Value, 1, null, [(nuint) lengths[i] / 4], null, 0, null, out CLEvent _);
+				CL.Finish(this.MemH.Que.Value);
+
+				// Log
+				this.Log("Kernel executed", "Buffer #" + i + " (" + lengths[i].ToString("N0") + " elements, args = {" + string.Join(',', args) + "})", 1);
 			}
+
+			// Post log
+			sw.Stop();
+			this.Log("Kernel execution time: " + sw.ElapsedMilliseconds + " ms", buffers.Length.ToString("N0") + " buffer(s)", 1);
 
 			// Return original indexPointer (since processing was in-place)
 			return indexPointer;
 		}
-
-
 
 
 	}

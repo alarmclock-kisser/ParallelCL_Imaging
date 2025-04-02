@@ -1,4 +1,5 @@
 using OpenTK.Graphics.ES11;
+using System.Drawing.Imaging;
 
 namespace ParallelCL_Imaging
 {
@@ -193,9 +194,9 @@ namespace ParallelCL_Imaging
 		private void button_execute_Click(object sender, EventArgs e)
 		{
 			// Abort if no IMG or no KernelH
-			if (IMG == null || KernelH == null)
+			if (IMG == null || KernelH == null || MemH == null)
 			{
-				MessageBox.Show("No image or kernel", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				MessageBox.Show("No image or kernel or memory", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
 				return;
 			}
 
@@ -203,8 +204,63 @@ namespace ParallelCL_Imaging
 			long ptr = IMG.Ptr;
 			object[] parameters = GuiB.GetParams();
 
+			// If no pointer but img -> move to device
+			bool pushBack = false;
+			if (ptr == 0 && IMG.OnHost)
+			{
+				pushBack = true;
+
+				// Move to device
+				var bytes = IMG.GetPixelsAsBytes();
+				IMG.Ptr = MemH.PushChunks([bytes]);
+				ptr = IMG.Ptr;
+				IMG.ClearImage();
+
+				// Log with MemH
+				MemH.Log("Image moved to device", (bytes.LongLength / 4).ToString("N0") + " pixels", 1);
+			}
+
 			// Execute kernel
 			IMG.Ptr = KernelH.ExecuteKernel(ptr, parameters);
+
+			// Push back if moved
+			if (pushBack)
+			{
+				// Move to host
+				var bytes = MemH.PullChunks<byte>(IMG.Ptr).FirstOrDefault();
+				IMG.SetImageFromBytes(bytes ?? []);
+				IMG.Ptr = 0;
+
+				// Log with MemH
+				MemH.Log("Image moved to host", ((bytes?.LongLength ?? 4) / 4).ToString("N0") + " pixels", 1);
+			}
+
+			// Toggle UI
+			ToggleUI();
+		}
+
+		private void button_export_Click(object sender, EventArgs e)
+		{
+			// Abort if no img o img on device
+			if (IMG == null || IMG.OnDevice)
+			{
+				MessageBox.Show("No image or image on device", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				return;
+			}
+
+			// SFD at MyPictures for bitmap
+			SaveFileDialog sfd = new SaveFileDialog();
+			sfd.FileName = IMG.Name;
+			sfd.Filter = "Bitmap|*.bmp";
+			sfd.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
+			sfd.OverwritePrompt = true;
+
+			// Show dialog
+			if (sfd.ShowDialog() == DialogResult.OK)
+			{
+				// Save image
+				IMG.Img?.Save(sfd.FileName, ImageFormat.Bmp);
+			}
 		}
 	}
 }

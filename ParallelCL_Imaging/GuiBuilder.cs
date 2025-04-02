@@ -49,99 +49,93 @@ namespace ParallelCL_Imaging
 
 			int pointers = 0;
 			int lengths = 0;
-			this.ParamsLabels = new Label[parameters.Length];
-			this.ParamsNumerics = new NumericUpDown[parameters.Length];
-			this.ParamsTips = new ToolTip[parameters.Length];
+			List<Label> labels = new();
+			List<NumericUpDown> numerics = new();
+			List<ToolTip> tips = new();
 
-			// For each parameter: Generate label, numeric and tooltip on panel
+			// **Erst alle Parameter verarbeiten und Listen füllen**
 			for (int i = 0; i < parameters.Length; i++)
 			{
-				// Skip if contains __global & * (pointer)
+				// **Pointer (__global *): Überspringen**
 				if (parameters[i].Contains("__global") && parameters[i].Contains("*"))
 				{
 					pointers++;
 					continue;
 				}
 
-				// Skip first int or if contains int and less than pointers
+				// **Erste int/long oder wenn weniger als Pointers: Überspringen**
 				if ((parameters[i].Contains("int") || parameters[i].Contains("long")) && (lengths < pointers || lengths == 0))
 				{
 					lengths++;
 					continue;
 				}
 
-				// Set numeric attributes
-				decimal min = 0;
-				decimal max = 0;
-				decimal inc = 1;
+				// **NumericUpDown-Werte setzen**
+				decimal min = -1000, max = 1000, inc = 1, val = 0;
 				int dec = 0;
-				decimal val = 0;
+
 				if (parameters[i].Contains("float"))
 				{
-					min = -1000;
-					max = 1000;
-					inc = 0.01M;
-					dec = 6;
-					val = 0;
+					inc = 0.01M; dec = 6;
 				}
 				else if (parameters[i].Contains("int"))
 				{
-					min = -1000;
-					max = 1000;
-					inc = 1;
-					dec = 0;
-					val = 0;
+					inc = 1; dec = 0;
 				}
 				else if (parameters[i].Contains("long"))
 				{
-					min = -999999999;
-					max = 999999999;
-					inc = 1;
-					dec = 0;
-					val = 0;
+					min = -999999999; max = 999999999; inc = 1; dec = 0;
 				}
 				else if (parameters[i].Contains("double"))
 				{
-					min = -1000;
-					max = 1000;
-					inc = 0.001M;
-					dec = 15;
-					val = 0;
+					inc = 0.001M; dec = 15;
 				}
 				else if (parameters[i].Contains("decimal"))
 				{
-					min = -1000;
-					max = 1000;
-					inc = 0.000001M;
-					dec = 24;
-					val = 0;
+					inc = 0.000001M; dec = 24;
 				}
 
-				int index = i - pointers - lengths;
+				int index = labels.Count;  // **Neuer Index anhand der Listenlänge**
 
-				// Label
-				ParamsLabels[index] = new Label();
-				ParamsLabels[index].Text = parameters[i];
-				ParamsLabels[index].Location = new Point(margin, margin + index * height);
-				ParamsLabels[index].Size = new Size(100, height);
-				ParamsPanel.Controls.Add(ParamsLabels[index]);
+				// **Label erstellen**
+				Label lbl = new()
+				{
+					Text = parameters[i],
+					Location = new Point(margin, margin + index * height),
+					Size = new Size(100, height)
+				};
+				labels.Add(lbl);
 
-				// Numeric
-				ParamsNumerics[index] = new NumericUpDown();
-				ParamsNumerics[index].Location = new Point(100 + margin, margin + index * height);
-				ParamsNumerics[index].Size = new Size(160, height);
-				ParamsNumerics[index].Minimum = min;
-				ParamsNumerics[index].Maximum = max;
-				ParamsNumerics[index].Increment = inc;
-				ParamsNumerics[index].DecimalPlaces = dec;
-				ParamsNumerics[index].Value = val;
-				ParamsPanel.Controls.Add(ParamsNumerics[index]);
+				// **NumericUpDown erstellen**
+				NumericUpDown num = new()
+				{
+					Location = new Point(100 + margin, margin + index * height),
+					Size = new Size(160, height),
+					Minimum = min,
+					Maximum = max,
+					Increment = inc,
+					DecimalPlaces = dec,
+					Value = val
+				};
+				numerics.Add(num);
 
-				// Tooltip
-				ParamsTips[index] = new ToolTip();
+				// **ToolTip hinzufügen**
+				tips.Add(new ToolTip());
 			}
 
-			// Add panel to window
+			// **Jetzt erst die Attribut-Arrays setzen**
+			ParamsLabels = labels.ToArray();
+			ParamsNumerics = numerics.ToArray();
+			ParamsTips = tips.ToArray();
+
+			// **Alles ins Panel packen**
+			for (int i = 0; i < labels.Count; i++)
+			{
+				ParamsPanel.Controls.Add(ParamsLabels[i]);
+				ParamsPanel.Controls.Add(ParamsNumerics[i]);
+			}
+
+			// **Panel ins Fenster hinzufügen**
 			Win.Controls.Add(ParamsPanel);
 		}
 
@@ -155,7 +149,10 @@ namespace ParallelCL_Imaging
 			object[] parameters = new object[ParamsNumerics.Length];
 			for (int i = 0; i < ParamsNumerics.Length; i++)
 			{
-				parameters[i] = ParamsNumerics[i].Value;
+				if (ParamsNumerics[i] != null)
+				{
+					parameters[i] = ParamsNumerics[i].Value;
+				}
 			}
 			return parameters;
 		}

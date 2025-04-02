@@ -1,4 +1,4 @@
-__kernel void GrayscaleKernel(__global uchar* pixels, long length, int intensity) {
+__kernel void GrayscaleKernel(__global uchar* pixels, long length) {
     int i = get_global_id(0) * 4; // RGBA (4 Bytes pro Pixel)
 
     if (i + 3 >= length) return;
@@ -9,13 +9,10 @@ __kernel void GrayscaleKernel(__global uchar* pixels, long length, int intensity
     uchar b = pixels[i + 2];
 
     // Grauwert berechnen (Luminanz-Formel)
-    uchar gray = (uchar)clamp((0.299f * r + 0.587f * g + 0.114f * b) * ((float)intensity / 100.0f), 0.0f, 255.0f);
+    uchar gray = (uchar)clamp(0.299f * r + 0.587f * g + 0.114f * b, 0.0f, 255.0f);
 
     // Setze RGB auf den Grauwert (Alpha bleibt unverändert)
     pixels[i] = gray;
     pixels[i + 1] = gray;
     pixels[i + 2] = gray;
-    
-    // Alpha-Wert unverändert lassen
-    pixels[i + 3] = pixels[i + 3];
 }

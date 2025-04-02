@@ -281,8 +281,8 @@ namespace ParallelCL_Imaging
 		{
 			List<T[]> chunks = [];
 
-			// Abort if no context
-			if (this.Ctx == null || this.Que == null)
+			// Abort if no context or null pointer
+			if (this.Ctx == null || this.Que == null || ptr == 0)
 			{
 				return chunks;
 			}
