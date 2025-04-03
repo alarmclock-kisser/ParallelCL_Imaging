@@ -109,12 +109,13 @@ namespace ParallelCL_Imaging
 			return kernelString;
 		}
 
-		public string? PrecompileKernelString(string? kernelString)
+		public string? PrecompileKernelString(string? kernelString, bool silent = false)
 		{
 			// Abort if kernelString null
 			if (kernelString == null)
 			{
-				this.Log("Error precompiling kernel string", "Kernel string is null");
+				if (!silent)
+					this.Log("Error precompiling kernel string", "Kernel string is null");
 				return null;
 			}
 
@@ -129,7 +130,8 @@ namespace ParallelCL_Imaging
 			// Check if contains "__kernel " and " void "
 			if (!kernelString.Contains("__kernel ") || !kernelString.Contains(" void "))
 			{
-				this.Log("Error precompiling kernel string", "Kernel string does not contain '__kernel ' and ' void '");
+				if (!silent)
+					this.Log("Error precompiling kernel string", "Kernel string does not contain '__kernel ' and ' void '");
 				return null;
 			}
 
@@ -139,7 +141,8 @@ namespace ParallelCL_Imaging
 			foreach (char c in kernelString)
 				if (closeCount != openCount || closeCount == 0)
 				{
-					this.Log("Error precompiling kernel string: ()-brackets not paired or 0", openCount + " open, " + closeCount + " close");
+					if (!silent)
+						this.Log("Error precompiling kernel string: ()-brackets not paired or 0", openCount + " open, " + closeCount + " close");
 					return null;
 				}
 
@@ -148,7 +151,8 @@ namespace ParallelCL_Imaging
 			closeCount = kernelString.Count(c => c == ']');
 			if (closeCount != openCount || closeCount == 0)
 			{
-				this.Log("Error precompiling kernel string: []-brackets not paired or 0", openCount + " open, " + closeCount + " close");
+				if (!silent)
+					this.Log("Error precompiling kernel string: []-brackets not paired or 0", openCount + " open, " + closeCount + " close");
 				return null;
 			}
 
@@ -158,14 +162,16 @@ namespace ParallelCL_Imaging
 			closeCount = kernelString.Count(c => c == '}');
 			if (closeCount != openCount || closeCount == 0)
 			{
-				this.Log("Error precompiling kernel string: {}-brackets not paired or 0", openCount + " open, " + closeCount + " close");
+				if (!silent)
+					this.Log("Error precompiling kernel string: {}-brackets not paired or 0", openCount + " open, " + closeCount + " close");
 				return null;
 			}
 
 			// Check if contains " int " (mandatory for input array length)
 			if (!kernelString.Contains(" int "))
 			{
-				this.Log("Error precompiling kernel string", "Kernel string does not contain ' int '");
+				if (!silent)
+					this.Log("Error precompiling kernel string", "Kernel string does not contain ' int '");
 				return null;
 			}
 
@@ -175,7 +181,8 @@ namespace ParallelCL_Imaging
 			kernelName = kernelString.Substring(start, end - start).Trim();
 			if (string.IsNullOrEmpty(kernelName))
 			{
-				this.Log("Error precompiling kernel string", "Kernel name not found");
+				if (!silent)
+					this.Log("Error precompiling kernel string", "Kernel name not found");
 				return null;
 			}
 
@@ -303,8 +310,32 @@ namespace ParallelCL_Imaging
 			return kernel;
 		}
 
-		public void SetKernel(string kernelName)
+		public string? SaveCompileKernel(string? kernelName = null, string kernelString = "")
 		{
+			kernelName ??= "Kernel" + DateTime.Now.ToString("FFFFFFF");
+			string kernelPath = Path.Combine(this.ContextH.Repopath, "Resources", "Kernels", kernelName + ".cl");
+
+			// Compile kernelString, if success -> save .cl file
+			if (CompileKernel(kernelString) == null)
+			{
+				this.Log("Kernel failed to compile, not saving .cl-file", kernelName, 1);
+				return null;
+			}
+
+			// Save kernelstring as .cl file
+			File.WriteAllText(kernelPath, kernelString);
+
+			return kernelPath;
+		}
+
+		public void SetKernel(string? kernelName = null)
+		{
+			kernelName ??= KernelName;
+			if (string.IsNullOrEmpty(kernelName))
+			{
+				return;
+			}
+
 			// Set kernel name
 			this.KernelName = kernelName;
 
@@ -444,15 +475,15 @@ namespace ParallelCL_Imaging
 								}
 							}
 
-							this.Log($"Type of args[{argsArrayIndex}]:", argValue?.GetType().ToString());
+							this.Log($"Type of args[{argsArrayIndex}]:", argValue?.GetType().ToString() ?? "N/A");
 
 							if (parameters[j].ToLower().Contains("float"))
 							{
-								CL.SetKernelArg(this.Kernel.Value, (uint) j, (float) argValue);
+								CL.SetKernelArg(this.Kernel.Value, (uint) j, (float) (argValue ?? 0));
 							}
 							else if (parameters[j].ToLower().Contains("double"))
 							{
-								CL.SetKernelArg(this.Kernel.Value, (uint) j, (double) argValue);
+								CL.SetKernelArg(this.Kernel.Value, (uint) j, (double) (argValue ?? 0));
 							}
 							else if (parameters[j].Contains("int"))
 							{

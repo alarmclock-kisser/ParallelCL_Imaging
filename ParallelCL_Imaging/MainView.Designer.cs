@@ -41,6 +41,8 @@
 			this.numericUpDown_zoom = new NumericUpDown();
 			this.button_recenter = new Button();
 			this.label_currentKernel = new Label();
+			this.textBox_kernelString = new TextBox();
+			this.button_kernelCompile = new Button();
 			((System.ComponentModel.ISupportInitialize) this.pictureBox_view).BeginInit();
 			this.panel_main.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize) this.numericUpDown_zoom).BeginInit();
@@ -166,11 +168,36 @@
 			this.label_currentKernel.TabIndex = 12;
 			this.label_currentKernel.Text = "Kernel loaded";
 			// 
+			// textBox_kernelString
+			// 
+			this.textBox_kernelString.AcceptsReturn = true;
+			this.textBox_kernelString.AcceptsTab = true;
+			this.textBox_kernelString.Location = new Point(12, 108);
+			this.textBox_kernelString.MaxLength = 9999999;
+			this.textBox_kernelString.Multiline = true;
+			this.textBox_kernelString.Name = "textBox_kernelString";
+			this.textBox_kernelString.PlaceholderText = "Kernel string here";
+			this.textBox_kernelString.Size = new Size(292, 416);
+			this.textBox_kernelString.TabIndex = 13;
+			this.textBox_kernelString.KeyPress += this.textBox_kernelString_KeyPress;
+			// 
+			// button_kernelCompile
+			// 
+			this.button_kernelCompile.Location = new Point(12, 530);
+			this.button_kernelCompile.Name = "button_kernelCompile";
+			this.button_kernelCompile.Size = new Size(75, 23);
+			this.button_kernelCompile.TabIndex = 14;
+			this.button_kernelCompile.Text = "Compile";
+			this.button_kernelCompile.UseVisualStyleBackColor = true;
+			this.button_kernelCompile.Click += this.button_kernelCompile_Click;
+			// 
 			// MainView
 			// 
 			this.AutoScaleDimensions = new SizeF(7F, 15F);
 			this.AutoScaleMode = AutoScaleMode.Font;
 			this.ClientSize = new Size(834, 961);
+			this.Controls.Add(this.button_kernelCompile);
+			this.Controls.Add(this.textBox_kernelString);
 			this.Controls.Add(this.label_currentKernel);
 			this.Controls.Add(this.button_recenter);
 			this.Controls.Add(this.numericUpDown_zoom);
@@ -186,7 +213,7 @@
 			this.MaximumSize = new Size(850, 1000);
 			this.MinimumSize = new Size(850, 1000);
 			this.Name = "MainView";
-			this.Text = "Form1";
+			this.Text = "OpenCL Imaging Kernels";
 			((System.ComponentModel.ISupportInitialize) this.pictureBox_view).EndInit();
 			this.panel_main.ResumeLayout(false);
 			((System.ComponentModel.ISupportInitialize) this.numericUpDown_zoom).EndInit();
@@ -209,5 +236,7 @@
 		private NumericUpDown numericUpDown_zoom;
 		private Button button_recenter;
 		private Label label_currentKernel;
+		private TextBox textBox_kernelString;
+		private Button button_kernelCompile;
 	}
 }

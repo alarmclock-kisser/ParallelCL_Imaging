@@ -350,5 +350,38 @@ namespace ParallelCL_Imaging
 				this.numericUpDown_zoom.Value = 100;
 			}
 		}
+
+		private void textBox_kernelString_KeyPress(object sender, KeyPressEventArgs e)
+		{
+			if (e.KeyChar == (char) Keys.Enter)
+			{
+				bool valid = KernelH?.PrecompileKernelString(textBox_kernelString.Text, true) != null;
+
+				button_kernelCompile.Enabled = valid;
+
+				// Always horizontal scroll, add vertical if more than 15 lines
+				textBox_kernelString.ScrollBars = textBox_kernelString.Lines.Length > 15 ? ScrollBars.Both : ScrollBars.Horizontal;
+			}
+		}
+
+		private void button_kernelCompile_Click(object sender, EventArgs e)
+		{
+			string name = KernelH?.PrecompileKernelString(textBox_kernelString.Text) ?? string.Empty;
+			if (string.IsNullOrEmpty(name))
+			{
+				MessageBox.Show("Kernel did not pre-compile successfully...", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				return;
+			}
+
+			// Compile kernel
+			string? path = KernelH?.SaveCompileKernel(name, textBox_kernelString.Text);
+			if (!string.IsNullOrEmpty(path))
+			{
+				MessageBox.Show("Successfully compiled & saved kernel string to file: \n\n" + path, "Saved", MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+			}
+
+			// Toggle UI with kernels list
+			ToggleUI();
+		}
 	}
 }
